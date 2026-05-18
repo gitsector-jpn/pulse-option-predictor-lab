@@ -141,6 +141,19 @@ p {
   text-shadow: 0 0 12px rgba(230, 240, 243, 0.1);
 }
 
+.build-badge {
+  width: fit-content;
+  padding: 3px 7px;
+  border: 1px solid rgba(95, 182, 255, 0.22);
+  color: #bde6ff;
+  background: rgba(95, 182, 255, 0.07);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
 .status-strip {
   display: inline-flex;
   align-items: center;

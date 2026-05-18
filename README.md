@@ -1,4 +1,19 @@
-# Pulse Option Predictor
+# Pulse Option Predictor Lab
+
+This repository is the experimental / lab edition of Pulse Option Predictor.
+It is used to verify larger UI and logic changes without affecting the stable public app.
+
+Stable edition:
+
+```text
+https://gitsector-jpn.github.io/pulse-option-predictor/
+```
+
+Lab edition:
+
+```text
+https://gitsector-jpn.github.io/pulse-option-predictor-lab/
+```
 
 Live direction lab for short-horizon chart observation.
 
@@ -60,10 +75,16 @@ Recommended for the current repository.
 4. Select `main` and `/ (root)`.
 5. Save.
 
-Expected URL:
+Expected stable URL:
 
 ```text
 https://gitsector-jpn.github.io/pulse-option-predictor/
+```
+
+Expected lab URL:
+
+```text
+https://gitsector-jpn.github.io/pulse-option-predictor-lab/
 ```
 
 ### Vercel / Netlify
