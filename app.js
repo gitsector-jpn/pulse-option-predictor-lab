@@ -36,6 +36,7 @@ const signalThresholdValue = $("#signalThresholdValue");
 const signalSoundToggle = $("#signalSoundToggle");
 const signalSoundTestGreen = $("#signalSoundTestGreen");
 const signalSoundTestRed = $("#signalSoundTestRed");
+const signalSettings = $("#signalSettings");
 
 const horizons = [15, 30, 60];
 const primarySignalHorizons = [15, 30];
@@ -155,6 +156,12 @@ function saveLifetimeStats() {
 function setConnection(state, text) {
   connectionDot.className = `dot ${state}`;
   connectionText.textContent = text;
+}
+
+function normalizeSignalPanelLayout() {
+  if (predictionPanel && signalSettings && signalSettings.parentElement !== predictionPanel) {
+    predictionPanel.appendChild(signalSettings);
+  }
 }
 
 function prepareTooltips() {
@@ -1200,6 +1207,7 @@ window.addEventListener("beforeunload", () => {
   cancelAnimationFrame(animationId);
 });
 
+normalizeSignalPanelLayout();
 prepareTooltips();
 loadSignalSoundSetting();
 loadLifetimeStats();
