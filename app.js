@@ -34,6 +34,8 @@ const signalSoundTestGreen = $("#signalSoundTestGreen");
 const signalSoundTestRed = $("#signalSoundTestRed");
 
 const horizons = [15, 30, 60];
+const primarySignalHorizons = [15, 30];
+const primarySignalThreshold = 70;
 const accuracyThresholds = [60, 65, 70, 80, 90];
 const accuracyMinSamples = 5;
 const statsVersion = "v1";
@@ -641,8 +643,12 @@ function getPredictionTier(probability) {
   return signalTiers.find((tier) => probability >= tier.min) || { key: "base", label: "Signal", min: 0 };
 }
 
+function isPrimarySignalHorizon(horizon) {
+  return primarySignalHorizons.includes(horizon);
+}
+
 function getSignalTier(predictions, direction) {
-  const aligned = predictions.filter((prediction) => prediction.direction === direction);
+  const aligned = predictions.filter((prediction) => isPrimarySignalHorizon(prediction.horizon) && prediction.direction === direction);
   const strength = aligned.length ? Math.max(...aligned.map((prediction) => prediction.probability)) : 0;
   const tier = getPredictionTier(strength);
   return { ...tier, strength };
@@ -677,17 +683,22 @@ function renderPrediction(horizon, prediction) {
   card.classList.toggle("tier-strong", tier.key === "strong");
   card.classList.toggle("tier-very-strong", tier.key === "very-strong");
   card.classList.toggle("tier-extreme", tier.key === "extreme");
-  if (prediction.direction !== "WAIT" && prediction.probability >= getSignalThreshold()) {
+  if (isPrimarySignalHorizon(horizon) && prediction.direction !== "WAIT" && prediction.probability >= primarySignalThreshold) {
     card.classList.add("signal-hit");
   }
 }
 
 function updateSignalState(predictions) {
   if (previewActive) return;
-  const threshold = getSignalThreshold();
-  const qualified = predictions.filter(
-    (prediction) => prediction.direction !== "WAIT" && prediction.probability >= threshold,
+  const primaryPredictions = primarySignalHorizons
+    .map((horizon) => predictions.find((prediction) => prediction.horizon === horizon))
+    .filter(Boolean);
+  const qualified = primaryPredictions.filter(
+    (prediction) => prediction.direction !== "WAIT" && prediction.probability >= primarySignalThreshold,
   );
+  const primaryReady =
+    qualified.length === primarySignalHorizons.length &&
+    qualified.every((prediction) => prediction.direction === qualified[0].direction);
   const counts = qualified.reduce(
     (acc, prediction) => {
       acc[prediction.direction] += 1;
@@ -699,13 +710,13 @@ function updateSignalState(predictions) {
   const matched = Math.max(counts.UP, counts.DOWN);
   const label = displayDirection(direction);
   const signalTier = getSignalTier(predictions, direction);
-  const nextStateKey = matched >= 3 ? `all-${direction}` : matched === 2 ? `almost-${direction}` : "normal";
+  const nextStateKey = primaryReady ? `all-${direction}` : matched === 1 ? `almost-${direction}` : "normal";
   const stateChanged = nextStateKey !== signalStateKey;
   signalStateKey = nextStateKey;
 
   clearSignalClasses();
 
-  if (matched >= 3) {
+  if (primaryReady) {
     const allStateClass = direction === "UP" ? "is-all-green" : "is-all-red";
     predictionPanel.classList.add(
       "signal-all",
@@ -724,11 +735,11 @@ function updateSignalState(predictions) {
     signalTitle.textContent = direction === "UP" ? "ALL GREEN" : "ALL RED";
     signalTitle.dataset.tooltip = direction === "UP" ? signalTitleTooltips.green : signalTitleTooltips.red;
     const tierLabel = signalTier.key === "base" ? "Signal" : signalTier.label;
-    signalMessage.textContent = `3つすべてが${threshold}%以上！ ${label} / ${tierLabel} ${signalTier.strength}%`;
+    signalMessage.textContent = `主判定 15秒・30秒が${primarySignalThreshold}%以上！ ${label} / ${tierLabel} ${signalTier.strength}%`;
     return;
   }
 
-  if (matched === 2) {
+  if (matched === 1) {
     predictionPanel.classList.add(
       "signal-almost",
       "is-almost-ready",
@@ -736,13 +747,13 @@ function updateSignalState(predictions) {
     );
     signalTitle.textContent = "Almost Ready";
     signalTitle.dataset.tooltip = signalTitleTooltips.almost;
-    signalMessage.textContent = `2つが${threshold}%以上で${label}方向。あと1つで成立`;
+    signalMessage.textContent = `主判定の片方が${primarySignalThreshold}%以上で${label}方向。15秒・30秒の一致待ち`;
     return;
   }
 
   signalTitle.textContent = "Signal Standby";
   signalTitle.dataset.tooltip = signalTitleTooltips.standby;
-  signalMessage.textContent = "3つの時間軸が揃うと強調表示します。";
+  signalMessage.textContent = "15秒・30秒が70%以上で同方向になると強調表示します。60秒は参考表示です。";
 }
 
 function clearSignalClasses() {

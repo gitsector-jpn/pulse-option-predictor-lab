@@ -1095,6 +1095,44 @@ canvas {
   min-width: 0;
 }
 
+.prediction-card .horizon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+}
+
+.prediction-card.is-primary .horizon::before,
+.prediction-card.is-reference .horizon::before {
+  display: inline-grid;
+  place-items: center;
+  min-width: 34px;
+  height: 16px;
+  padding: 0 5px;
+  border: 1px solid rgba(95, 182, 255, 0.26);
+  color: #bde6ff;
+  background: rgba(95, 182, 255, 0.06);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.prediction-card.is-primary .horizon::before {
+  content: "主";
+}
+
+.prediction-card.is-reference {
+  border-color: rgba(153, 168, 181, 0.16);
+  background: rgba(20, 25, 30, 0.72);
+}
+
+.prediction-card.is-reference .horizon::before {
+  content: "参考";
+  border-color: rgba(153, 168, 181, 0.2);
+  color: var(--muted);
+  background: rgba(153, 168, 181, 0.04);
+}
+
 .prediction-card strong {
   font-size: var(--direction-font-size);
   line-height: 1;
@@ -1128,6 +1166,13 @@ canvas {
 .prediction-card.tier-extreme {
   border-color: rgba(244, 201, 93, 0.46);
   box-shadow: inset 0 0 20px rgba(244, 201, 93, 0.08);
+}
+
+.prediction-card.is-reference.tier-strong,
+.prediction-card.is-reference.tier-very-strong,
+.prediction-card.is-reference.tier-extreme {
+  border-color: rgba(153, 168, 181, 0.18);
+  box-shadow: inset 0 0 14px rgba(153, 168, 181, 0.04);
 }
 
 .prediction-panel.signal-all .prediction-card.signal-hit,
