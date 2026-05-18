@@ -583,6 +583,100 @@ canvas {
   text-shadow: 0 0 8px rgba(95, 182, 255, 0.22);
 }
 
+.entry-state-panel {
+  display: grid;
+  grid-template-columns: minmax(92px, auto) 1fr;
+  gap: 5px 12px;
+  align-items: end;
+  min-height: 92px;
+  padding: 13px 14px;
+  border: 1px solid rgba(153, 168, 181, 0.2);
+  background:
+    linear-gradient(135deg, rgba(95, 182, 255, 0.05), transparent 42%),
+    rgba(13, 18, 22, 0.84);
+}
+
+.entry-state-label {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.entry-state-panel strong {
+  color: var(--text);
+  font-size: clamp(34px, 4vw, 46px);
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+}
+
+.entry-state-panel > span:last-of-type {
+  align-self: center;
+  justify-self: end;
+  min-width: 72px;
+  padding: 4px 8px;
+  border: 1px solid rgba(153, 168, 181, 0.22);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.entry-state-panel p {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.entry-state-panel.is-go.direction-up {
+  border-color: rgba(53, 210, 143, 0.52);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(53, 210, 143, 0.13), transparent 42%),
+    rgba(14, 24, 19, 0.88);
+  box-shadow: inset 0 0 18px rgba(53, 210, 143, 0.08);
+}
+
+.entry-state-panel.is-go.direction-up strong {
+  color: #45e69c;
+  text-shadow: 0 0 14px rgba(53, 210, 143, 0.46);
+}
+
+.entry-state-panel.is-go.direction-down {
+  border-color: rgba(255, 93, 108, 0.52);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 93, 108, 0.12), transparent 42%),
+    rgba(29, 18, 22, 0.88);
+  box-shadow: inset 0 0 18px rgba(255, 93, 108, 0.08);
+}
+
+.entry-state-panel.is-go.direction-down strong {
+  color: #ff6d7b;
+  text-shadow: 0 0 14px rgba(255, 93, 108, 0.42);
+}
+
+.entry-state-panel.is-caution {
+  border-color: rgba(244, 201, 93, 0.44);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(244, 201, 93, 0.1), transparent 42%),
+    rgba(28, 24, 16, 0.86);
+}
+
+.entry-state-panel.is-caution strong {
+  color: var(--gold);
+}
+
+.entry-state-panel.is-no-trade {
+  border-color: rgba(255, 93, 108, 0.38);
+  background: rgba(29, 18, 22, 0.76);
+}
+
+.entry-state-panel.is-no-trade strong {
+  color: #ffc5ce;
+  font-size: clamp(28px, 3.2vw, 36px);
+}
+
 .prediction-panel.signal-almost,
 .prediction-panel.is-almost-ready {
   border-color: rgba(53, 210, 143, 0.34);

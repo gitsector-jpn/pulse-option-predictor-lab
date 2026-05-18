@@ -25,6 +25,10 @@ const accuracyBreakdown = $("#accuracyBreakdown");
 const sessionStatsReset = $("#sessionStatsReset");
 const lifetimeStatsReset = $("#lifetimeStatsReset");
 const predictionPanel = $(".prediction-panel");
+const entryStatePanel = $("#entryStatePanel");
+const entryStateTitle = $("#entryStateTitle");
+const entryStateDirection = $("#entryStateDirection");
+const entryStateReason = $("#entryStateReason");
 const signalTitle = $("#signalTitle");
 const signalMessage = $("#signalMessage");
 const signalThreshold = $("#signalThreshold");
@@ -688,8 +692,89 @@ function renderPrediction(horizon, prediction) {
   }
 }
 
+function getEntryState(predictions) {
+  const primaryPredictions = primarySignalHorizons
+    .map((horizon) => predictions.find((prediction) => prediction.horizon === horizon))
+    .filter(Boolean);
+
+  if (primaryPredictions.length < primarySignalHorizons.length) {
+    return {
+      state: "wait",
+      direction: "neutral",
+      title: "WAIT",
+      directionLabel: "NEUTRAL",
+      reason: "15秒・30秒の条件待ち",
+    };
+  }
+
+  const severeRisk = primaryPredictions.some((prediction) => {
+    const condition = prediction.condition;
+    return condition && (condition.suddenMoveRisk >= 0.78 || condition.candleProfile.wickRisk >= 0.78);
+  });
+  const cautionRisk = primaryPredictions.some((prediction) => {
+    const condition = prediction.condition;
+    return (
+      condition &&
+      (condition.suddenMoveRisk >= 0.56 || condition.candleProfile.wickRisk >= 0.62 || condition.volStability <= 0.34)
+    );
+  });
+
+  const primaryReady =
+    primaryPredictions.every((prediction) => prediction.direction !== "WAIT" && prediction.probability >= primarySignalThreshold) &&
+    primaryPredictions.every((prediction) => prediction.direction === primaryPredictions[0].direction);
+
+  if (primaryReady) {
+    const direction = primaryPredictions[0].direction;
+    return {
+      state: "go",
+      direction: direction.toLowerCase(),
+      title: "GO",
+      directionLabel: direction,
+      reason: `15秒・30秒が${primarySignalThreshold}%以上で同方向`,
+    };
+  }
+
+  if (severeRisk) {
+    return {
+      state: "no-trade",
+      direction: "neutral",
+      title: "NO TRADE",
+      directionLabel: "NEUTRAL",
+      reason: "急変動またはヒゲ反転リスクが高め",
+    };
+  }
+
+  if (cautionRisk) {
+    return {
+      state: "caution",
+      direction: "neutral",
+      title: "CAUTION",
+      directionLabel: "NEUTRAL",
+      reason: "相場荒れ気味。主判定の一致待ち",
+    };
+  }
+
+  return {
+    state: "wait",
+    direction: "neutral",
+    title: "WAIT",
+    directionLabel: "NEUTRAL",
+    reason: `15秒・30秒が${primarySignalThreshold}%以上で同方向になるまで待機`,
+  };
+}
+
+function renderEntryState(predictions) {
+  if (!entryStatePanel || !entryStateTitle || !entryStateDirection || !entryStateReason) return;
+  const entryState = getEntryState(predictions);
+  entryStatePanel.className = `entry-state-panel is-${entryState.state} direction-${entryState.direction}`;
+  entryStateTitle.textContent = entryState.title;
+  entryStateDirection.textContent = entryState.directionLabel;
+  entryStateReason.textContent = entryState.reason;
+}
+
 function updateSignalState(predictions) {
   if (previewActive) return;
+  renderEntryState(predictions);
   const primaryPredictions = primarySignalHorizons
     .map((horizon) => predictions.find((prediction) => prediction.horizon === horizon))
     .filter(Boolean);

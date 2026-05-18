@@ -93,6 +93,12 @@
         </section>
 
         <section class="prediction-panel" aria-label="方向予測">
+          <div class="entry-state-panel is-wait" id="entryStatePanel" aria-live="polite">
+            <span class="entry-state-label">ENTRY STATE</span>
+            <strong id="entryStateTitle">WAIT</strong>
+            <span id="entryStateDirection">NEUTRAL</span>
+            <p id="entryStateReason">15秒・30秒の条件待ち</p>
+          </div>
           <div class="signal-banner" id="signalBanner" aria-live="polite">
             <div class="signal-banner-head">
               <strong id="signalTitle" data-tooltip="3つの時間軸がまだ強く揃っていない待機状態です。">Signal Standby</strong>
