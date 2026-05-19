@@ -11,7 +11,8 @@ const types = {
 
 http
   .createServer(async (req, res) => {
-    const file = join(root, req.url === "/" ? "index.html" : req.url || "index.html");
+    const pathname = new URL(req.url || "/", "http://127.0.0.1").pathname;
+    const file = join(root, pathname === "/" ? "index.html" : pathname);
     try {
       const body = await readFile(file);
       res.writeHead(200, { "content-type": types[extname(file)] || "application/octet-stream" });

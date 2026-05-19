@@ -797,6 +797,102 @@ canvas {
   color: #ff8a97;
 }
 
+.precision-mode-panel {
+  display: grid;
+  gap: 6px;
+  min-height: 74px;
+  padding: 9px 11px;
+  border: 1px solid rgba(153, 168, 181, 0.18);
+  background:
+    linear-gradient(135deg, rgba(95, 182, 255, 0.035), transparent 48%),
+    rgba(13, 18, 22, 0.8);
+}
+
+.precision-mode-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.precision-mode-head > span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.precision-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.precision-toggle input {
+  width: 28px;
+  height: 16px;
+  accent-color: var(--green);
+}
+
+.precision-mode-panel strong {
+  color: #d8e8f2;
+  font-size: 15px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
+.precision-mode-panel p {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.precision-mode-panel.is-on {
+  border-color: rgba(95, 182, 255, 0.3);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(95, 182, 255, 0.08), transparent 44%),
+    rgba(13, 20, 24, 0.84);
+}
+
+.precision-mode-panel.is-pass {
+  border-color: rgba(53, 210, 143, 0.38);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(53, 210, 143, 0.1), transparent 44%),
+    rgba(13, 22, 18, 0.84);
+}
+
+.precision-mode-panel.is-pass strong {
+  color: #8ff7bd;
+}
+
+.precision-mode-panel.is-filtering strong {
+  color: #bde6ff;
+}
+
+.prediction-panel.precision-mode {
+  border-color: rgba(95, 182, 255, 0.28);
+}
+
+.prediction-panel.precision-pass {
+  box-shadow:
+    0 0 0 1px rgba(53, 210, 143, 0.14),
+    inset 0 0 18px rgba(53, 210, 143, 0.05);
+}
+
+.prediction-card.precision-muted {
+  opacity: 0.48;
+  filter: saturate(0.72);
+}
+
+.prediction-card.precision-focus {
+  opacity: 1;
+  filter: none;
+}
+
 .prediction-panel.signal-almost,
 .prediction-panel.is-almost-ready {
   border-color: rgba(53, 210, 143, 0.34);
@@ -2298,6 +2394,11 @@ td {
   }
 
   .market-status-panel {
+    min-height: auto;
+    padding: 10px;
+  }
+
+  .precision-mode-panel {
     min-height: auto;
     padding: 10px;
   }

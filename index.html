@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Pulse Option Predictor</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="styles.css?v=lab-a6372cc" />
+    <link rel="stylesheet" href="styles.css?v=lab-precision-mode" />
   </head>
   <body>
     <main class="app-shell">
@@ -104,6 +104,17 @@
             <strong id="marketStatusTitle">MARKET OK</strong>
             <span id="marketStatusScore">Risk --</span>
             <p id="marketStatusReason">相場環境を監視中</p>
+          </div>
+          <div class="precision-mode-panel is-off" id="precisionModePanel">
+            <div class="precision-mode-head">
+              <span data-tooltip="高精度条件だけを抽出する研究用フィルタです。発生回数を減らし、弱い場面を捨てるための表示モードです。">PRECISION MODE</span>
+              <label class="precision-toggle">
+                <input id="precisionModeToggle" type="checkbox" />
+                <span id="precisionModeToggleLabel">OFF</span>
+              </label>
+            </div>
+            <strong id="precisionModeState">RESEARCH FILTER</strong>
+            <p id="precisionModeReason">OFF: 通常の15秒・30秒シグナルを表示</p>
           </div>
           <div class="signal-banner" id="signalBanner" aria-live="polite">
             <div class="signal-banner-head">

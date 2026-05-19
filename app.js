@@ -33,6 +33,11 @@ const marketStatusPanel = $("#marketStatusPanel");
 const marketStatusTitle = $("#marketStatusTitle");
 const marketStatusScore = $("#marketStatusScore");
 const marketStatusReason = $("#marketStatusReason");
+const precisionModePanel = $("#precisionModePanel");
+const precisionModeToggle = $("#precisionModeToggle");
+const precisionModeToggleLabel = $("#precisionModeToggleLabel");
+const precisionModeState = $("#precisionModeState");
+const precisionModeReason = $("#precisionModeReason");
 const signalTitle = $("#signalTitle");
 const signalMessage = $("#signalMessage");
 const signalThreshold = $("#signalThreshold");
@@ -53,6 +58,7 @@ const sessionStatsLabel = "今回の稼働";
 const lifetimeStatsLabel = "累計戦績";
 const sessionStatsTooltip = "アプリ起動後から現在までの成績です。ページ更新でリセットされます。";
 const lifetimeStatsTooltip = "ブラウザへ保存された累積データです。長期的な傾向確認に使用します。";
+const precisionModeStorageKey = "pulsePrecisionMode";
 const horizonEls = {
   15: { dir: $("#dir15"), bar: $("#bar15"), prob: $("#prob15"), analysis: $("#analysis15") },
   30: { dir: $("#dir30"), bar: $("#bar30"), prob: $("#prob30"), analysis: $("#analysis30") },
@@ -155,6 +161,28 @@ function saveLifetimeStats() {
   } catch {
     // Lifetime stats are optional; keep the live session usable if storage is blocked.
   }
+}
+
+function loadPrecisionModeSetting() {
+  if (!precisionModeToggle) return;
+  try {
+    precisionModeToggle.checked = localStorage.getItem(precisionModeStorageKey) === "true";
+  } catch {
+    precisionModeToggle.checked = false;
+  }
+}
+
+function savePrecisionModeSetting() {
+  if (!precisionModeToggle) return;
+  try {
+    localStorage.setItem(precisionModeStorageKey, precisionModeToggle.checked ? "true" : "false");
+  } catch {
+    // Precision mode is a local display preference; ignore storage failures.
+  }
+}
+
+function isPrecisionModeEnabled() {
+  return Boolean(precisionModeToggle?.checked);
 }
 
 function setConnection(state, text) {
@@ -662,6 +690,29 @@ function isPrimarySignalHorizon(horizon) {
   return primarySignalHorizons.includes(horizon);
 }
 
+function getPrimaryPredictions(predictions) {
+  return primarySignalHorizons
+    .map((horizon) => predictions.find((prediction) => prediction.horizon === horizon))
+    .filter(Boolean);
+}
+
+function getPrimaryRiskMetrics(primaryPredictions) {
+  const conditions = primaryPredictions.map((prediction) => prediction.condition).filter(Boolean);
+  const scoreStrengths = primaryPredictions.map((prediction) => Math.abs(prediction.score ?? 0));
+  const meanStrength = average(scoreStrengths);
+  return {
+    avgWickRisk: average(conditions.map((condition) => condition.candleProfile?.wickRisk ?? 0)),
+    avgSuddenMoveRisk: average(conditions.map((condition) => condition.suddenMoveRisk ?? 0)),
+    avgVolInstability: average(conditions.map((condition) => 1 - (condition.volStability ?? 0.5))),
+    avgContinuityRisk: average(conditions.map((condition) => 1 - (condition.candleProfile?.continuity ?? 0.5))),
+    scoreDispersion: clamp(
+      Math.abs((scoreStrengths[0] ?? 0) - (scoreStrengths[1] ?? 0)) / Math.max(meanStrength, 0.01),
+      0,
+      1,
+    ),
+  };
+}
+
 function getSignalTier(predictions, direction) {
   const aligned = predictions.filter((prediction) => isPrimarySignalHorizon(prediction.horizon) && prediction.direction === direction);
   const strength = aligned.length ? Math.max(...aligned.map((prediction) => prediction.probability)) : 0;
@@ -731,6 +782,12 @@ function clearPrimarySignalCardEffects() {
   });
 }
 
+function clearPrecisionCardEffects() {
+  document.querySelectorAll(".prediction-card").forEach((card) => {
+    card.classList.remove("precision-muted", "precision-focus");
+  });
+}
+
 function setPrimarySignalCardEffects(isActive, direction, previewTierKey = "") {
   clearPrimarySignalCardEffects();
   if (!isActive || (direction !== "UP" && direction !== "DOWN")) return;
@@ -748,10 +805,33 @@ function setPrimarySignalCardEffects(isActive, direction, previewTierKey = "") {
   });
 }
 
+function setPrecisionCardEffects(precisionStatus) {
+  clearPrecisionCardEffects();
+  if (!isPrecisionModeEnabled()) return;
+  document.querySelectorAll(".prediction-card").forEach((card) => card.classList.add("precision-muted"));
+
+  if (precisionStatus.ready) {
+    primarySignalHorizons.forEach((horizon) => {
+      const card = document.querySelector(`[data-horizon="${horizon}"]`);
+      card?.classList.remove("precision-muted");
+      card?.classList.add("precision-focus");
+    });
+    return;
+  }
+
+  if (!precisionStatus.focusDirection) return;
+  primarySignalHorizons.forEach((horizon) => {
+    const prediction = currentPredictions.find((item) => item.horizon === horizon);
+    const card = document.querySelector(`[data-horizon="${horizon}"]`);
+    if (prediction && card && prediction.direction === precisionStatus.focusDirection && prediction.probability >= primarySignalThreshold) {
+      card.classList.remove("precision-muted");
+      card.classList.add("precision-focus");
+    }
+  });
+}
+
 function getEntryState(predictions) {
-  const primaryPredictions = primarySignalHorizons
-    .map((horizon) => predictions.find((prediction) => prediction.horizon === horizon))
-    .filter(Boolean);
+  const primaryPredictions = getPrimaryPredictions(predictions);
 
   if (primaryPredictions.length < primarySignalHorizons.length) {
     return {
@@ -788,9 +868,7 @@ function getEntryState(predictions) {
 }
 
 function getMarketStatus(predictions) {
-  const primaryPredictions = primarySignalHorizons
-    .map((horizon) => predictions.find((prediction) => prediction.horizon === horizon))
-    .filter(Boolean);
+  const primaryPredictions = getPrimaryPredictions(predictions);
 
   if (primaryPredictions.length < primarySignalHorizons.length) {
     return {
@@ -801,29 +879,18 @@ function getMarketStatus(predictions) {
     };
   }
 
-  const conditions = primaryPredictions.map((prediction) => prediction.condition).filter(Boolean);
   const directionMismatch =
     primaryPredictions.some((prediction) => prediction.direction === "WAIT") ||
     primaryPredictions.some((prediction) => prediction.direction !== primaryPredictions[0].direction);
-  const avgWickRisk = average(conditions.map((condition) => condition.candleProfile?.wickRisk ?? 0));
-  const avgSuddenMoveRisk = average(conditions.map((condition) => condition.suddenMoveRisk ?? 0));
-  const avgVolInstability = average(conditions.map((condition) => 1 - (condition.volStability ?? 0.5)));
-  const avgContinuityRisk = average(conditions.map((condition) => 1 - (condition.candleProfile?.continuity ?? 0.5)));
-  const scoreStrengths = primaryPredictions.map((prediction) => Math.abs(prediction.score ?? 0));
-  const meanStrength = average(scoreStrengths);
-  const scoreDispersion = clamp(
-    Math.abs(scoreStrengths[0] - scoreStrengths[1]) / Math.max(meanStrength, 0.01),
-    0,
-    1,
-  );
+  const metrics = getPrimaryRiskMetrics(primaryPredictions);
 
   const score = Math.round(
     clamp(
-      avgSuddenMoveRisk * 28 +
-        avgWickRisk * 24 +
-        avgVolInstability * 22 +
-        avgContinuityRisk * 14 +
-        scoreDispersion * 10 +
+      metrics.avgSuddenMoveRisk * 28 +
+        metrics.avgWickRisk * 24 +
+        metrics.avgVolInstability * 22 +
+        metrics.avgContinuityRisk * 14 +
+        metrics.scoreDispersion * 10 +
         (directionMismatch ? 14 : 0),
       0,
       100,
@@ -856,31 +923,108 @@ function getMarketStatus(predictions) {
   };
 }
 
-function renderEntryState(predictions) {
+function getPrecisionStatus(predictions, marketStatus) {
+  const primaryPredictions = getPrimaryPredictions(predictions);
+  if (primaryPredictions.length < primarySignalHorizons.length) {
+    return {
+      ready: false,
+      direction: "neutral",
+      state: "waiting",
+      label: "DATA WAIT",
+      reason: "15秒・30秒のデータ蓄積待ち",
+      focusDirection: null,
+    };
+  }
+
+  const [first, second] = primaryPredictions;
+  const aligned =
+    primaryPredictions.every((prediction) => prediction.direction !== "WAIT" && prediction.probability >= primarySignalThreshold) &&
+    first.direction === second.direction;
+  const direction = aligned ? first.direction : "neutral";
+  const focusDirection =
+    first.direction !== "WAIT" && first.probability >= primarySignalThreshold
+      ? first.direction
+      : second.direction !== "WAIT" && second.probability >= primarySignalThreshold
+        ? second.direction
+        : null;
+  const metrics = getPrimaryRiskMetrics(primaryPredictions);
+  const marketOk = marketStatus.state === "ok";
+  const calmMove = metrics.avgSuddenMoveRisk <= 0.35;
+  const calmWick = metrics.avgWickRisk <= 0.42;
+  const stableVol = metrics.avgVolInstability <= 0.42;
+  const stableContinuity = metrics.avgContinuityRisk <= 0.55;
+  const stableScore = metrics.scoreDispersion <= 0.65;
+  const ready = aligned && marketOk && calmMove && calmWick && stableVol && stableContinuity && stableScore;
+
+  const blockers = [];
+  if (!aligned) blockers.push("15秒・30秒の70%以上同方向待ち");
+  if (!marketOk) blockers.push("MARKET OK待ち");
+  if (!calmMove) blockers.push("急変動を検知");
+  if (!calmWick) blockers.push("ヒゲ反転リスク高め");
+  if (!stableVol) blockers.push("ボラ急変気味");
+  if (!stableContinuity || !stableScore) blockers.push("短期安定性不足");
+
+  return {
+    ready,
+    direction: ready ? direction.toLowerCase() : "neutral",
+    signalDirection: ready ? direction : null,
+    state: ready ? "pass" : "filtering",
+    label: ready ? "PRECISION PASS" : "FILTERING",
+    reason: ready ? `15秒・30秒 ${direction} / MARKET OK / 低リスク条件通過` : blockers.slice(0, 2).join(" / "),
+    focusDirection,
+    blockers,
+  };
+}
+
+function applyEntryState(entryState) {
   if (!entryStatePanel || !entryStateTitle || !entryStateDirection || !entryStateReason) return;
-  const entryState = getEntryState(predictions);
   entryStatePanel.className = `entry-state-panel is-${entryState.state} direction-${entryState.direction}`;
   entryStateTitle.textContent = entryState.title;
   entryStateDirection.textContent = entryState.directionLabel;
   entryStateReason.textContent = entryState.reason;
 }
 
-function renderMarketStatus(predictions) {
+function renderEntryState(predictions) {
+  applyEntryState(getEntryState(predictions));
+}
+
+function renderPrecisionEntryState(precisionStatus) {
+  if (!isPrecisionModeEnabled()) return;
+  applyEntryState({
+    state: precisionStatus.ready ? "go" : "wait",
+    direction: precisionStatus.direction,
+    title: precisionStatus.ready ? "GO" : "WAIT",
+    directionLabel: precisionStatus.ready ? precisionStatus.signalDirection : "FILTER",
+    reason: precisionStatus.ready ? "PRECISION条件成立" : "PRECISION条件待ち",
+  });
+}
+
+function renderMarketStatus(marketStatus) {
   if (!marketStatusPanel || !marketStatusTitle || !marketStatusScore || !marketStatusReason) return;
-  const marketStatus = getMarketStatus(predictions);
   marketStatusPanel.className = `market-status-panel is-${marketStatus.state}`;
   marketStatusTitle.textContent = marketStatus.title;
   marketStatusScore.textContent = `Risk ${marketStatus.score}`;
   marketStatusReason.textContent = marketStatus.reason;
 }
 
+function renderPrecisionMode(precisionStatus) {
+  if (!precisionModePanel || !precisionModeState || !precisionModeReason) return;
+  const enabled = isPrecisionModeEnabled();
+  precisionModePanel.className = `precision-mode-panel ${enabled ? "is-on" : "is-off"} is-${precisionStatus.state}`;
+  precisionModeState.textContent = enabled ? precisionStatus.label : "RESEARCH FILTER";
+  precisionModeReason.textContent = enabled ? precisionStatus.reason : "OFF: 通常の15秒・30秒シグナルを表示";
+  if (precisionModeToggleLabel) precisionModeToggleLabel.textContent = enabled ? "ON" : "OFF";
+}
+
 function updateSignalState(predictions) {
   if (previewActive) return;
+  const marketStatus = getMarketStatus(predictions);
+  const precisionStatus = getPrecisionStatus(predictions, marketStatus);
   renderEntryState(predictions);
-  renderMarketStatus(predictions);
-  const primaryPredictions = primarySignalHorizons
-    .map((horizon) => predictions.find((prediction) => prediction.horizon === horizon))
-    .filter(Boolean);
+  renderPrecisionEntryState(precisionStatus);
+  renderMarketStatus(marketStatus);
+  renderPrecisionMode(precisionStatus);
+  const primaryPredictions = getPrimaryPredictions(predictions);
   const qualified = primaryPredictions.filter(
     (prediction) => prediction.direction !== "WAIT" && prediction.probability >= primarySignalThreshold,
   );
@@ -903,8 +1047,18 @@ function updateSignalState(predictions) {
   signalStateKey = nextStateKey;
 
   clearSignalClasses();
+  setPrecisionCardEffects(precisionStatus);
+
+  if (isPrecisionModeEnabled() && !precisionStatus.ready) {
+    predictionPanel.classList.add("precision-mode", "precision-filtering");
+    signalTitle.textContent = "Precision Filter";
+    signalTitle.dataset.tooltip = "高精度条件だけを抽出する研究用フィルタです。条件不足時は強調表示を抑制します。";
+    signalMessage.textContent = precisionStatus.reason;
+    return;
+  }
 
   if (primaryReady) {
+    if (isPrecisionModeEnabled()) predictionPanel.classList.add("precision-mode", "precision-pass");
     setPrimarySignalCardEffects(true, direction);
     const allStateClass = direction === "UP" ? "is-all-green" : "is-all-red";
     predictionPanel.classList.add(
@@ -924,11 +1078,14 @@ function updateSignalState(predictions) {
     signalTitle.textContent = direction === "UP" ? "ALL GREEN" : "ALL RED";
     signalTitle.dataset.tooltip = direction === "UP" ? signalTitleTooltips.green : signalTitleTooltips.red;
     const tierLabel = signalTier.key === "base" ? "Signal" : signalTier.label;
-    signalMessage.textContent = `主判定 15秒・30秒が${primarySignalThreshold}%以上！ ${label} / ${tierLabel} ${signalTier.strength}%`;
+    signalMessage.textContent = isPrecisionModeEnabled()
+      ? `PRECISION MODE / ${label} / ${tierLabel} ${signalTier.strength}%`
+      : `主判定 15秒・30秒が${primarySignalThreshold}%以上！ ${label} / ${tierLabel} ${signalTier.strength}%`;
     return;
   }
 
   if (matched === 1) {
+    if (isPrecisionModeEnabled()) predictionPanel.classList.add("precision-mode", "precision-filtering");
     predictionPanel.classList.add(
       "signal-almost",
       "is-almost-ready",
@@ -959,10 +1116,14 @@ function clearSignalClasses() {
     "tier-strong",
     "tier-very-strong",
     "tier-extreme",
+    "precision-mode",
+    "precision-pass",
+    "precision-filtering",
     "is-preview",
   );
   statusStrip.classList.remove("live-synced");
   clearPrimarySignalCardEffects();
+  clearPrecisionCardEffects();
 }
 
 function previewSignal(direction, probability) {
@@ -1290,6 +1451,10 @@ signalSoundTestRed?.addEventListener("click", async () => {
   await unlockSignalAudio();
   playSignalSound("DOWN", { force: true });
 });
+precisionModeToggle?.addEventListener("change", () => {
+  savePrecisionModeSetting();
+  updateSignalState(currentPredictions);
+});
 document.querySelectorAll("[data-preview-signal]").forEach((button) => {
   button.addEventListener("click", async () => {
     await unlockSignalAudio();
@@ -1309,6 +1474,7 @@ window.addEventListener("beforeunload", () => {
 normalizeSignalPanelLayout();
 prepareTooltips();
 loadSignalSoundSetting();
+loadPrecisionModeSetting();
 loadLifetimeStats();
 resetState();
 loop();
