@@ -191,7 +191,7 @@ p {
 .workspace {
   display: grid;
   grid-template-columns: 270px minmax(0, 1fr) minmax(330px, 360px);
-  grid-template-rows: minmax(620px, auto) auto;
+  grid-template-rows: minmax(690px, auto) auto;
   align-items: stretch;
   gap: 12px;
 }
@@ -708,6 +708,82 @@ canvas {
 .entry-state-panel.is-no-trade strong {
   color: #ffc5ce;
   font-size: clamp(25px, 2.8vw, 32px);
+}
+
+.market-status-panel {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 5px 10px;
+  min-height: 64px;
+  padding: 9px 11px;
+  border: 1px solid rgba(153, 168, 181, 0.18);
+  background:
+    linear-gradient(135deg, rgba(153, 168, 181, 0.035), transparent 48%),
+    rgba(13, 18, 22, 0.8);
+}
+
+.market-status-label {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.market-status-panel strong {
+  align-self: center;
+  color: var(--text);
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.market-status-panel > span:last-of-type {
+  align-self: center;
+  justify-self: end;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.market-status-panel p {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.market-status-panel.is-ok {
+  border-color: rgba(53, 210, 143, 0.3);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(53, 210, 143, 0.08), transparent 44%),
+    rgba(13, 22, 18, 0.82);
+}
+
+.market-status-panel.is-ok strong {
+  color: #7cf4b2;
+}
+
+.market-status-panel.is-caution {
+  border-color: rgba(244, 201, 93, 0.34);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(244, 201, 93, 0.08), transparent 44%),
+    rgba(24, 21, 14, 0.82);
+}
+
+.market-status-panel.is-caution strong {
+  color: #f0c860;
+}
+
+.market-status-panel.is-no-trade {
+  border-color: rgba(255, 93, 108, 0.34);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 93, 108, 0.08), transparent 44%),
+    rgba(27, 16, 20, 0.82);
+}
+
+.market-status-panel.is-no-trade strong {
+  color: #ff8a97;
 }
 
 .prediction-panel.signal-almost,
@@ -2006,6 +2082,15 @@ td {
   .signal-banner {
     min-height: auto;
     padding: 10px;
+  }
+
+  .market-status-panel {
+    min-height: auto;
+    padding: 10px;
+  }
+
+  .market-status-panel strong {
+    font-size: 18px;
   }
 
   .signal-banner-head {

@@ -29,6 +29,10 @@ const entryStatePanel = $("#entryStatePanel");
 const entryStateTitle = $("#entryStateTitle");
 const entryStateDirection = $("#entryStateDirection");
 const entryStateReason = $("#entryStateReason");
+const marketStatusPanel = $("#marketStatusPanel");
+const marketStatusTitle = $("#marketStatusTitle");
+const marketStatusScore = $("#marketStatusScore");
+const marketStatusReason = $("#marketStatusReason");
 const signalTitle = $("#signalTitle");
 const signalMessage = $("#signalMessage");
 const signalThreshold = $("#signalThreshold");
@@ -714,18 +718,6 @@ function getEntryState(predictions) {
     };
   }
 
-  const severeRisk = primaryPredictions.some((prediction) => {
-    const condition = prediction.condition;
-    return condition && (condition.suddenMoveRisk >= 0.78 || condition.candleProfile.wickRisk >= 0.78);
-  });
-  const cautionRisk = primaryPredictions.some((prediction) => {
-    const condition = prediction.condition;
-    return (
-      condition &&
-      (condition.suddenMoveRisk >= 0.56 || condition.candleProfile.wickRisk >= 0.62 || condition.volStability <= 0.34)
-    );
-  });
-
   const primaryReady =
     primaryPredictions.every((prediction) => prediction.direction !== "WAIT" && prediction.probability >= primarySignalThreshold) &&
     primaryPredictions.every((prediction) => prediction.direction === primaryPredictions[0].direction);
@@ -741,32 +733,81 @@ function getEntryState(predictions) {
     };
   }
 
-  if (severeRisk) {
-    return {
-      state: "no-trade",
-      direction: "neutral",
-      title: "NO TRADE",
-      directionLabel: "NEUTRAL",
-      reason: "急変動またはヒゲ反転リスクが高め",
-    };
-  }
-
-  if (cautionRisk) {
-    return {
-      state: "caution",
-      direction: "neutral",
-      title: "CAUTION",
-      directionLabel: "NEUTRAL",
-      reason: "相場荒れ気味。主判定の一致待ち",
-    };
-  }
-
   return {
     state: "wait",
     direction: "neutral",
     title: "WAIT",
     directionLabel: "NEUTRAL",
     reason: `15秒・30秒が${primarySignalThreshold}%以上で同方向になるまで待機`,
+  };
+}
+
+function getMarketStatus(predictions) {
+  const primaryPredictions = primarySignalHorizons
+    .map((horizon) => predictions.find((prediction) => prediction.horizon === horizon))
+    .filter(Boolean);
+
+  if (primaryPredictions.length < primarySignalHorizons.length) {
+    return {
+      state: "caution",
+      title: "CAUTION",
+      score: 45,
+      reason: "相場データ蓄積中",
+    };
+  }
+
+  const conditions = primaryPredictions.map((prediction) => prediction.condition).filter(Boolean);
+  const directionMismatch =
+    primaryPredictions.some((prediction) => prediction.direction === "WAIT") ||
+    primaryPredictions.some((prediction) => prediction.direction !== primaryPredictions[0].direction);
+  const avgWickRisk = average(conditions.map((condition) => condition.candleProfile?.wickRisk ?? 0));
+  const avgSuddenMoveRisk = average(conditions.map((condition) => condition.suddenMoveRisk ?? 0));
+  const avgVolInstability = average(conditions.map((condition) => 1 - (condition.volStability ?? 0.5)));
+  const avgContinuityRisk = average(conditions.map((condition) => 1 - (condition.candleProfile?.continuity ?? 0.5)));
+  const scoreStrengths = primaryPredictions.map((prediction) => Math.abs(prediction.score ?? 0));
+  const meanStrength = average(scoreStrengths);
+  const scoreDispersion = clamp(
+    Math.abs(scoreStrengths[0] - scoreStrengths[1]) / Math.max(meanStrength, 0.01),
+    0,
+    1,
+  );
+
+  const score = Math.round(
+    clamp(
+      avgSuddenMoveRisk * 28 +
+        avgWickRisk * 24 +
+        avgVolInstability * 22 +
+        avgContinuityRisk * 14 +
+        scoreDispersion * 10 +
+        (directionMismatch ? 14 : 0),
+      0,
+      100,
+    ),
+  );
+
+  if (score >= 70) {
+    return {
+      state: "no-trade",
+      title: "NO TRADE",
+      score,
+      reason: "急変動・ヒゲ反転・不安定性が強め",
+    };
+  }
+
+  if (score >= 40) {
+    return {
+      state: "caution",
+      title: "CAUTION",
+      score,
+      reason: "方向不一致またはボラ・ヒゲリスクを検知",
+    };
+  }
+
+  return {
+    state: "ok",
+    title: "MARKET OK",
+    score,
+    reason: "主判定の方向と勢いが比較的安定",
   };
 }
 
@@ -779,9 +820,19 @@ function renderEntryState(predictions) {
   entryStateReason.textContent = entryState.reason;
 }
 
+function renderMarketStatus(predictions) {
+  if (!marketStatusPanel || !marketStatusTitle || !marketStatusScore || !marketStatusReason) return;
+  const marketStatus = getMarketStatus(predictions);
+  marketStatusPanel.className = `market-status-panel is-${marketStatus.state}`;
+  marketStatusTitle.textContent = marketStatus.title;
+  marketStatusScore.textContent = `Risk ${marketStatus.score}`;
+  marketStatusReason.textContent = marketStatus.reason;
+}
+
 function updateSignalState(predictions) {
   if (previewActive) return;
   renderEntryState(predictions);
+  renderMarketStatus(predictions);
   const primaryPredictions = primarySignalHorizons
     .map((horizon) => predictions.find((prediction) => prediction.horizon === horizon))
     .filter(Boolean);
