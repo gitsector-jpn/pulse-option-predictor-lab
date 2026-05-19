@@ -420,11 +420,13 @@ canvas {
 
 .signal-banner {
   display: grid;
+  grid-template-rows: 28px 35px;
   gap: 6px;
-  min-height: 50px;
+  min-height: 88px;
   padding: 9px 11px;
   border: 1px solid rgba(153, 168, 181, 0.18);
   background: #14191e;
+  overflow: hidden;
 }
 
 .signal-banner-head {
@@ -433,6 +435,8 @@ canvas {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 10px;
+  min-height: 28px;
+  overflow: visible;
 }
 
 .signal-banner strong {
@@ -442,9 +446,15 @@ canvas {
 }
 
 .signal-banner span {
+  display: -webkit-box;
+  min-height: 35px;
+  max-height: 35px;
+  overflow: hidden;
   color: var(--muted);
   font-size: 12px;
   line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .signal-settings {
@@ -2282,7 +2292,8 @@ td {
   }
 
   .signal-banner {
-    min-height: auto;
+    grid-template-rows: 28px 38px;
+    min-height: 88px;
     padding: 10px;
   }
 
