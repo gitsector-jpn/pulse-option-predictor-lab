@@ -676,7 +676,22 @@ function getSignalThreshold() {
 function renderPrediction(horizon, prediction) {
   const card = document.querySelector(`[data-horizon="${horizon}"]`);
   const els = horizonEls[horizon];
-  card.classList.remove("up", "down", "signal-hit", "tier-strong", "tier-very-strong", "tier-extreme");
+  if (!previewActive) {
+    card.classList.remove(
+      "up",
+      "down",
+      "signal-hit",
+      "strong-signal-primary",
+      "signal-up",
+      "signal-down",
+      "tier-strong",
+      "tier-very-strong",
+      "tier-extreme",
+      "preview-tier-strong",
+      "preview-tier-very-strong",
+      "preview-tier-extreme",
+    );
+  }
   if (!prediction) {
     els.dir.textContent = "--";
     els.bar.style.width = "0";
@@ -693,14 +708,44 @@ function renderPrediction(horizon, prediction) {
   els.analysis.textContent = prediction.analysis;
   els.analysis.dataset.fulltext = prediction.analysis;
   els.analysis.tabIndex = 0;
-  if (prediction.direction === "UP") card.classList.add("up");
-  if (prediction.direction === "DOWN") card.classList.add("down");
-  card.classList.toggle("tier-strong", tier.key === "strong");
-  card.classList.toggle("tier-very-strong", tier.key === "very-strong");
-  card.classList.toggle("tier-extreme", tier.key === "extreme");
-  if (isPrimarySignalHorizon(horizon) && prediction.direction !== "WAIT" && prediction.probability >= primarySignalThreshold) {
-    card.classList.add("signal-hit");
+  if (!previewActive) {
+    if (prediction.direction === "UP") card.classList.add("up");
+    if (prediction.direction === "DOWN") card.classList.add("down");
+    card.classList.toggle("tier-strong", tier.key === "strong");
+    card.classList.toggle("tier-very-strong", tier.key === "very-strong");
+    card.classList.toggle("tier-extreme", tier.key === "extreme");
   }
+}
+
+function clearPrimarySignalCardEffects() {
+  document.querySelectorAll(".prediction-card").forEach((card) => {
+    card.classList.remove(
+      "signal-hit",
+      "strong-signal-primary",
+      "signal-up",
+      "signal-down",
+      "preview-tier-strong",
+      "preview-tier-very-strong",
+      "preview-tier-extreme",
+    );
+  });
+}
+
+function setPrimarySignalCardEffects(isActive, direction, previewTierKey = "") {
+  clearPrimarySignalCardEffects();
+  if (!isActive || (direction !== "UP" && direction !== "DOWN")) return;
+  primarySignalHorizons.forEach((horizon) => {
+    const card = document.querySelector(`[data-horizon="${horizon}"]`);
+    if (!card) return;
+    card.classList.add(
+      "signal-hit",
+      "strong-signal-primary",
+      direction === "UP" ? "signal-up" : "signal-down",
+    );
+    if (previewTierKey && previewTierKey !== "base") {
+      card.classList.add(`preview-tier-${previewTierKey}`);
+    }
+  });
 }
 
 function getEntryState(predictions) {
@@ -860,6 +905,7 @@ function updateSignalState(predictions) {
   clearSignalClasses();
 
   if (primaryReady) {
+    setPrimarySignalCardEffects(true, direction);
     const allStateClass = direction === "UP" ? "is-all-green" : "is-all-red";
     predictionPanel.classList.add(
       "signal-all",
@@ -916,6 +962,7 @@ function clearSignalClasses() {
     "is-preview",
   );
   statusStrip.classList.remove("live-synced");
+  clearPrimarySignalCardEffects();
 }
 
 function previewSignal(direction, probability) {
@@ -936,6 +983,7 @@ function previewSignal(direction, probability) {
     "signal-pulse",
   );
   if (tier.key !== "base") predictionPanel.classList.add(`tier-${tier.key}`);
+  setPrimarySignalCardEffects(true, direction, tier.key);
   statusStrip.classList.add("live-synced");
   window.setTimeout(() => predictionPanel.classList.remove("signal-pulse"), 2600);
 
