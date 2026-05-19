@@ -1830,6 +1830,7 @@ canvas {
 
 .signal-table {
   grid-column: 1 / -1;
+  min-width: 0;
   min-height: 220px;
   overflow: visible;
 }
@@ -1994,6 +1995,8 @@ canvas {
 .table-wrap {
   --log-header-height: 42px;
   --log-row-height: 42px;
+  max-width: 100%;
+  min-width: 0;
   height: calc(var(--log-header-height) + (var(--log-row-height) * 5));
   overflow-x: auto;
   overflow-y: auto;
