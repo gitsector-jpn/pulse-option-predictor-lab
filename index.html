@@ -96,23 +96,23 @@
           <div class="status-hud-panel" id="statusHudPanel" aria-label="STATUS HUD">
             <div class="status-hud-head">
               <span>STATUS HUD</span>
-              <span class="status-hud-info" data-tooltip="MARKET STATUS、PRECISION MODE、主判定シグナルを1枚にまとめた表示です。">ⓘ</span>
+              <span class="status-hud-info" data-tooltip="現在状態、相場状態、高精度判定、シグナル状態を1枚にまとめた表示です。状態コードは英語で表示します。">ⓘ</span>
             </div>
           <div class="entry-state-panel is-wait" id="entryStatePanel" aria-live="polite">
-            <span class="entry-state-label">ENTRY STATE</span>
+            <span class="entry-state-label">現在状態</span>
             <strong id="entryStateTitle">WAIT</strong>
             <span id="entryStateDirection">NEUTRAL</span>
             <p id="entryStateReason">15秒・30秒の条件待ち</p>
           </div>
           <div class="market-status-panel is-ok" id="marketStatusPanel" aria-live="polite">
-            <span class="market-status-label">MARKET STATUS</span>
+            <span class="market-status-label">相場状態</span>
             <strong id="marketStatusTitle">MARKET OK</strong>
             <span id="marketStatusScore">Risk --</span>
             <p id="marketStatusReason">相場環境を監視中</p>
           </div>
           <div class="precision-mode-panel is-off" id="precisionModePanel">
             <div class="precision-mode-head">
-              <span data-tooltip="高精度条件だけを抽出する研究用フィルタです。発生回数を減らし、弱い場面を捨てるための表示モードです。">PRECISION MODE</span>
+              <span data-tooltip="高精度条件だけを抽出する研究用フィルタです。発生回数を減らし、弱い場面を捨てるための表示モードです。">高精度判定</span>
               <label class="precision-toggle">
                 <input id="precisionModeToggle" type="checkbox" />
                 <span id="precisionModeToggleLabel">OFF</span>
@@ -123,6 +123,7 @@
           </div>
           <div class="signal-banner" id="signalBanner" aria-live="polite">
             <div class="signal-banner-head">
+              <span class="signal-status-label">シグナル状態</span>
               <strong id="signalTitle" data-tooltip="3つの時間軸がまだ強く揃っていない待機状態です。">Signal Standby</strong>
               <details class="signal-settings" id="signalSettings">
                 <summary>設定</summary>

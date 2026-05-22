@@ -1451,11 +1451,12 @@ canvas {
 
 .prediction-panel .status-hud-panel .entry-state-label,
 .prediction-panel .status-hud-panel .market-status-label,
-.prediction-panel .status-hud-panel .precision-mode-head > span {
+.prediction-panel .status-hud-panel .precision-mode-head > span,
+.prediction-panel .status-hud-panel .signal-status-label {
   color: #9bc6da;
   font-size: 10px;
   line-height: 1;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
 }
 
 .prediction-panel .status-hud-panel > .entry-state-panel {
@@ -1531,6 +1532,9 @@ canvas {
 }
 
 .prediction-panel .status-hud-panel .signal-banner-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 6px;
   min-height: 0;
   align-items: center;
 }
@@ -1538,6 +1542,10 @@ canvas {
 .prediction-panel .status-hud-panel .signal-banner strong {
   font-size: 14px;
   line-height: 1.1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .prediction-panel .status-hud-panel .signal-settings {
