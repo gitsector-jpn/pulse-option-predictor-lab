@@ -101,7 +101,11 @@
             <div class="compact-status" id="compactStatusHud" data-tooltip="相場状態、高精度判定、シグナル状態を統合した簡易表示です。">
               <div class="compact-status-main">
                 <strong id="compactStatusTitle">WAIT</strong>
-                <span id="compactStatusArrow">—</span>
+                <span id="compactStatusArrow" class="compact-status-arrow is-neutral" aria-label="neutral">
+                  <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+                    <path d="M32 6 55 29H42v29H22V29H9L32 6Z" />
+                  </svg>
+                </span>
               </div>
               <span id="compactStatusSummary">MARKET CHECK / SIGNAL WAIT</span>
             </div>

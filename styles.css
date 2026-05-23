@@ -1439,12 +1439,46 @@ canvas {
   letter-spacing: 0.02em;
 }
 
-.compact-status-main span {
+.compact-status-arrow {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: clamp(40px, 4.8vw, 58px);
+  height: clamp(40px, 4.8vw, 58px);
   color: var(--muted);
-  font-size: clamp(40px, 4.8vw, 58px);
-  font-weight: 900;
-  line-height: 0.9;
+  line-height: 1;
   transform-origin: center;
+}
+
+.compact-status-arrow svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.compact-status-arrow path {
+  fill: currentColor;
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+}
+
+.compact-status-arrow.is-down svg {
+  transform: rotate(180deg);
+}
+
+.compact-status-arrow.is-neutral svg {
+  display: none;
+}
+
+.compact-status-arrow.is-neutral::before {
+  content: "";
+  width: 72%;
+  height: 7px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.72;
+  box-shadow: 0 0 10px rgba(153, 168, 181, 0.12);
 }
 
 .compact-status > span {
@@ -1459,7 +1493,7 @@ canvas {
 }
 
 .compact-status.is-go.direction-up .compact-status-main strong,
-.compact-status.is-go.direction-up .compact-status-main span {
+.compact-status.is-go.direction-up .compact-status-arrow {
   color: #52e7a0;
 }
 
@@ -1467,16 +1501,13 @@ canvas {
   text-shadow: 0 0 14px rgba(53, 210, 143, 0.36);
 }
 
-.compact-status.is-go.direction-up .compact-status-main span {
+.compact-status.is-go.direction-up .compact-status-arrow {
   animation: arrowPulseGreen 1.7s ease-in-out infinite;
   filter: drop-shadow(0 0 7px rgba(53, 210, 143, 0.28));
-  text-shadow:
-    0 0 10px rgba(53, 210, 143, 0.58),
-    0 0 18px rgba(95, 255, 180, 0.22);
 }
 
 .compact-status.is-go.direction-down .compact-status-main strong,
-.compact-status.is-go.direction-down .compact-status-main span {
+.compact-status.is-go.direction-down .compact-status-arrow {
   color: #ff6d7b;
 }
 
@@ -1484,22 +1515,19 @@ canvas {
   text-shadow: 0 0 14px rgba(255, 93, 108, 0.34);
 }
 
-.compact-status.is-go.direction-down .compact-status-main span {
+.compact-status.is-go.direction-down .compact-status-arrow {
   animation: arrowPulseRed 1.7s ease-in-out infinite;
   filter: drop-shadow(0 0 7px rgba(255, 93, 108, 0.26));
-  text-shadow:
-    0 0 10px rgba(255, 93, 108, 0.56),
-    0 0 18px rgba(255, 128, 104, 0.22);
 }
 
 .compact-status.is-caution .compact-status-main strong,
-.compact-status.is-caution .compact-status-main span {
+.compact-status.is-caution .compact-status-arrow {
   color: var(--gold);
   text-shadow: 0 0 12px rgba(244, 201, 93, 0.22);
 }
 
 .compact-status.is-no-trade .compact-status-main strong,
-.compact-status.is-no-trade .compact-status-main span {
+.compact-status.is-no-trade .compact-status-arrow {
   color: #ffc5ce;
   text-shadow: 0 0 12px rgba(255, 93, 108, 0.24);
 }
@@ -2154,16 +2182,16 @@ canvas {
   100% {
     opacity: 0.9;
     transform: scale(1);
-    text-shadow:
-      0 0 8px rgba(53, 210, 143, 0.46),
-      0 0 15px rgba(95, 255, 180, 0.18);
+    filter:
+      drop-shadow(0 0 7px rgba(53, 210, 143, 0.42))
+      drop-shadow(0 0 14px rgba(95, 255, 180, 0.16));
   }
   50% {
     opacity: 1;
     transform: scale(1.035);
-    text-shadow:
-      0 0 12px rgba(53, 210, 143, 0.7),
-      0 0 24px rgba(95, 255, 180, 0.28);
+    filter:
+      drop-shadow(0 0 10px rgba(53, 210, 143, 0.62))
+      drop-shadow(0 0 22px rgba(95, 255, 180, 0.24));
   }
 }
 
@@ -2172,16 +2200,16 @@ canvas {
   100% {
     opacity: 0.9;
     transform: scale(1);
-    text-shadow:
-      0 0 8px rgba(255, 93, 108, 0.44),
-      0 0 15px rgba(255, 128, 104, 0.18);
+    filter:
+      drop-shadow(0 0 7px rgba(255, 93, 108, 0.4))
+      drop-shadow(0 0 14px rgba(255, 128, 104, 0.16));
   }
   50% {
     opacity: 1;
     transform: scale(1.035);
-    text-shadow:
-      0 0 12px rgba(255, 93, 108, 0.68),
-      0 0 24px rgba(255, 128, 104, 0.28);
+    filter:
+      drop-shadow(0 0 10px rgba(255, 93, 108, 0.6))
+      drop-shadow(0 0 22px rgba(255, 128, 104, 0.24));
   }
 }
 
@@ -2562,8 +2590,8 @@ td {
   .prediction-panel.tier-very-strong::after,
   .prediction-panel.tier-extreme::after,
   .prediction-card.strong-signal-primary::before,
-  .compact-status.is-go.direction-up .compact-status-main span,
-  .compact-status.is-go.direction-down .compact-status-main span,
+  .compact-status.is-go.direction-up .compact-status-arrow,
+  .compact-status.is-go.direction-down .compact-status-arrow,
   .status-strip.live-synced .dot.live,
   .prediction-card strong,
   .prob-bar span {

@@ -1035,7 +1035,8 @@ function renderCompactStatusHud({ marketStatus, precisionStatus, entryTitle, dir
 
   compactStatusHud.className = `compact-status is-${surfaceTitle.toLowerCase().replace(/\s+/g, "-")} direction-${normalizedDirection.toLowerCase()}`;
   compactStatusTitle.textContent = surfaceTitle;
-  compactStatusArrow.textContent = arrow;
+  compactStatusArrow.className = `compact-status-arrow is-${arrow === "↑" ? "up" : arrow === "↓" ? "down" : "neutral"}`;
+  compactStatusArrow.setAttribute("aria-label", arrow === "↑" ? "UP" : arrow === "↓" ? "DOWN" : "neutral");
   compactStatusSummary.textContent = summary;
   compactStatusHud.dataset.tooltip = [
     `相場状態: ${marketStatus.title} / Risk ${marketStatus.score}`,
