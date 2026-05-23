@@ -1441,9 +1441,10 @@ canvas {
 
 .compact-status-main span {
   color: var(--muted);
-  font-size: clamp(32px, 4vw, 46px);
-  font-weight: 800;
+  font-size: clamp(40px, 4.8vw, 58px);
+  font-weight: 900;
   line-height: 0.9;
+  transform-origin: center;
 }
 
 .compact-status > span {
@@ -1460,13 +1461,35 @@ canvas {
 .compact-status.is-go.direction-up .compact-status-main strong,
 .compact-status.is-go.direction-up .compact-status-main span {
   color: #52e7a0;
+}
+
+.compact-status.is-go.direction-up .compact-status-main strong {
   text-shadow: 0 0 14px rgba(53, 210, 143, 0.36);
+}
+
+.compact-status.is-go.direction-up .compact-status-main span {
+  animation: arrowPulseGreen 1.7s ease-in-out infinite;
+  filter: drop-shadow(0 0 7px rgba(53, 210, 143, 0.28));
+  text-shadow:
+    0 0 10px rgba(53, 210, 143, 0.58),
+    0 0 18px rgba(95, 255, 180, 0.22);
 }
 
 .compact-status.is-go.direction-down .compact-status-main strong,
 .compact-status.is-go.direction-down .compact-status-main span {
   color: #ff6d7b;
+}
+
+.compact-status.is-go.direction-down .compact-status-main strong {
   text-shadow: 0 0 14px rgba(255, 93, 108, 0.34);
+}
+
+.compact-status.is-go.direction-down .compact-status-main span {
+  animation: arrowPulseRed 1.7s ease-in-out infinite;
+  filter: drop-shadow(0 0 7px rgba(255, 93, 108, 0.26));
+  text-shadow:
+    0 0 10px rgba(255, 93, 108, 0.56),
+    0 0 18px rgba(255, 128, 104, 0.22);
 }
 
 .compact-status.is-caution .compact-status-main strong,
@@ -2126,6 +2149,42 @@ canvas {
   }
 }
 
+@keyframes arrowPulseGreen {
+  0%,
+  100% {
+    opacity: 0.9;
+    transform: scale(1);
+    text-shadow:
+      0 0 8px rgba(53, 210, 143, 0.46),
+      0 0 15px rgba(95, 255, 180, 0.18);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.035);
+    text-shadow:
+      0 0 12px rgba(53, 210, 143, 0.7),
+      0 0 24px rgba(95, 255, 180, 0.28);
+  }
+}
+
+@keyframes arrowPulseRed {
+  0%,
+  100% {
+    opacity: 0.9;
+    transform: scale(1);
+    text-shadow:
+      0 0 8px rgba(255, 93, 108, 0.44),
+      0 0 15px rgba(255, 128, 104, 0.18);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.035);
+    text-shadow:
+      0 0 12px rgba(255, 93, 108, 0.68),
+      0 0 24px rgba(255, 128, 104, 0.28);
+  }
+}
+
 @keyframes tierPulse {
   0%,
   100% {
@@ -2503,6 +2562,8 @@ td {
   .prediction-panel.tier-very-strong::after,
   .prediction-panel.tier-extreme::after,
   .prediction-card.strong-signal-primary::before,
+  .compact-status.is-go.direction-up .compact-status-main span,
+  .compact-status.is-go.direction-down .compact-status-main span,
   .status-strip.live-synced .dot.live,
   .prediction-card strong,
   .prob-bar span {
