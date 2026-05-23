@@ -33,6 +33,10 @@ const marketStatusPanel = $("#marketStatusPanel");
 const marketStatusTitle = $("#marketStatusTitle");
 const marketStatusScore = $("#marketStatusScore");
 const marketStatusReason = $("#marketStatusReason");
+const compactStatusHud = $("#compactStatusHud");
+const compactStatusTitle = $("#compactStatusTitle");
+const compactStatusArrow = $("#compactStatusArrow");
+const compactStatusSummary = $("#compactStatusSummary");
 const precisionModePanel = $("#precisionModePanel");
 const precisionModeToggle = $("#precisionModeToggle");
 const precisionModeToggleLabel = $("#precisionModeToggleLabel");
@@ -1016,6 +1020,32 @@ function renderPrecisionMode(precisionStatus) {
   if (precisionModeToggleLabel) precisionModeToggleLabel.textContent = enabled ? "ON" : "OFF";
 }
 
+function renderCompactStatusHud({ marketStatus, precisionStatus, entryTitle, direction = "neutral", signalLabel = "WAIT", strength = 0, tierLabel = "Signal" }) {
+  if (!compactStatusHud || !compactStatusTitle || !compactStatusArrow || !compactStatusSummary) return;
+  const normalizedDirection = direction === "UP" || direction === "DOWN" ? direction : "neutral";
+  const isBlockedByMarket = marketStatus.state === "no-trade" || marketStatus.state === "caution";
+  const surfaceTitle = isBlockedByMarket ? marketStatus.title : entryTitle;
+  const arrow = surfaceTitle === "GO" ? (normalizedDirection === "UP" ? "↑" : normalizedDirection === "DOWN" ? "↓" : "—") : "—";
+  const precisionLabel = isPrecisionModeEnabled() ? precisionStatus.label : "PRECISION OFF";
+  const strengthText = strength ? `${tierLabel} ${strength}%` : signalLabel;
+  const summary =
+    surfaceTitle === "GO"
+      ? `${normalizedDirection} / ${strengthText}`
+      : `${marketStatus.title} / ${precisionLabel} / ${signalLabel}`;
+
+  compactStatusHud.className = `compact-status is-${surfaceTitle.toLowerCase().replace(/\s+/g, "-")} direction-${normalizedDirection.toLowerCase()}`;
+  compactStatusTitle.textContent = surfaceTitle;
+  compactStatusArrow.textContent = arrow;
+  compactStatusSummary.textContent = summary;
+  compactStatusHud.dataset.tooltip = [
+    `相場状態: ${marketStatus.title} / Risk ${marketStatus.score}`,
+    `高精度判定: ${precisionLabel}`,
+    `シグナル状態: ${signalLabel}`,
+    `方向: ${normalizedDirection}`,
+    `強度: ${strength ? `${strength}% / ${tierLabel}` : "--"}`,
+  ].join("\n");
+}
+
 function updateSignalState(predictions) {
   if (previewActive) return;
   const marketStatus = getMarketStatus(predictions);
@@ -1054,6 +1084,13 @@ function updateSignalState(predictions) {
     signalTitle.textContent = "Precision Filter";
     signalTitle.dataset.tooltip = "高精度条件だけを抽出する研究用フィルタです。条件不足時は強調表示を抑制します。";
     signalMessage.textContent = precisionStatus.reason;
+    renderCompactStatusHud({
+      marketStatus,
+      precisionStatus,
+      entryTitle: "WAIT",
+      direction: precisionStatus.focusDirection ?? "neutral",
+      signalLabel: "Precision Filter",
+    });
     return;
   }
 
@@ -1081,6 +1118,15 @@ function updateSignalState(predictions) {
     signalMessage.textContent = isPrecisionModeEnabled()
       ? `PRECISION MODE / ${label} / ${tierLabel} ${signalTier.strength}%`
       : `主判定 15秒・30秒が${primarySignalThreshold}%以上！ ${label} / ${tierLabel} ${signalTier.strength}%`;
+    renderCompactStatusHud({
+      marketStatus,
+      precisionStatus,
+      entryTitle: "GO",
+      direction,
+      signalLabel: direction === "UP" ? "ALL GREEN" : "ALL RED",
+      strength: signalTier.strength,
+      tierLabel,
+    });
     return;
   }
 
@@ -1094,12 +1140,28 @@ function updateSignalState(predictions) {
     signalTitle.textContent = "Almost Ready";
     signalTitle.dataset.tooltip = signalTitleTooltips.almost;
     signalMessage.textContent = `主判定の片方が${primarySignalThreshold}%以上で${label}方向。15秒・30秒の一致待ち`;
+    renderCompactStatusHud({
+      marketStatus,
+      precisionStatus,
+      entryTitle: "WAIT",
+      direction,
+      signalLabel: "Almost Ready",
+      strength: signalTier.strength,
+      tierLabel: signalTier.key === "base" ? "Signal" : signalTier.label,
+    });
     return;
   }
 
   signalTitle.textContent = "Signal Standby";
   signalTitle.dataset.tooltip = signalTitleTooltips.standby;
   signalMessage.textContent = "15秒・30秒が70%以上で同方向になると強調表示します。60秒は参考表示です。";
+  renderCompactStatusHud({
+    marketStatus,
+    precisionStatus,
+    entryTitle: "WAIT",
+    direction: "neutral",
+    signalLabel: "Signal Standby",
+  });
 }
 
 function clearSignalClasses() {
@@ -1151,6 +1213,15 @@ function previewSignal(direction, probability) {
   signalTitle.textContent = label;
   signalTitle.dataset.tooltip = direction === "UP" ? signalTitleTooltips.green : signalTitleTooltips.red;
   signalMessage.textContent = `DEMO MODE / ${display} / ${tier.label} ${probability}%`;
+  renderCompactStatusHud({
+    marketStatus: { state: "ok", title: "MARKET OK", score: "--" },
+    precisionStatus: { label: "PREVIEW" },
+    entryTitle: "GO",
+    direction,
+    signalLabel: label,
+    strength: probability,
+    tierLabel: tier.label,
+  });
   playSignalSound(direction, { force: true });
 
   previewTimer = window.setTimeout(() => {

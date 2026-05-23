@@ -98,6 +98,13 @@
               <span>STATUS HUD</span>
               <span class="status-hud-info" data-tooltip="現在状態、相場状態、高精度判定、シグナル状態を1枚にまとめた表示です。状態コードは英語で表示します。">ⓘ</span>
             </div>
+            <div class="compact-status" id="compactStatusHud" data-tooltip="相場状態、高精度判定、シグナル状態を統合した簡易表示です。">
+              <div class="compact-status-main">
+                <strong id="compactStatusTitle">WAIT</strong>
+                <span id="compactStatusArrow">—</span>
+              </div>
+              <span id="compactStatusSummary">MARKET CHECK / SIGNAL WAIT</span>
+            </div>
           <div class="entry-state-panel is-wait" id="entryStatePanel" aria-live="polite">
             <span class="entry-state-label">現在状態</span>
             <strong id="entryStateTitle">WAIT</strong>
